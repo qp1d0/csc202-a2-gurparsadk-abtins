@@ -24,6 +24,50 @@ class RLNode:
     first: Row
     rest: RowList
 
+
+EXPECTED_LABELS = ['country', 'year', 'electricity_and_heat_co2_emissions',
+                   'electricity_and_heat_co2_emissions_per_capita',
+                   'energy_co2_emissions', 'energy_co2_emissions_per_capita',
+                   'total_co2_emissions_excluding_lucf',
+                   'total_co2_emissions_excluding_lucf_per_capita']
+
+#Converts a list of strings (one CSV line) into a Row.
+#Numeric fields that are empty strings become None.
+def list_to_row(line: List[str]) -> Row:
+    def parse_float(s: str) -> Union[float, None]:
+        if s == '':
+            return None
+        return float(s)
+    return Row(
+        country=line[0],
+        year=int(line[1]),
+        electricity_and_heat_co2_emissions=parse_float(line[2]),
+        electricity_and_heat_co2_emissions_per_capita=parse_float(line[3]),
+        energy_co2_emissions=parse_float(line[4]),
+        energy_co2_emissions_per_capita=parse_float(line[5]),
+        total_co2_emissions_excluding_lucf=parse_float(line[6]),
+        total_co2_emissions_excluding_lucf_per_capita=parse_float(line[7])
+    )
+
+#Accepts a CSV filename and returns a linked list of Rows.
+#Raises ValueError if the header line doesn't match expected labels.
+def read_csv_lines(filename: str) -> RowList:
+    with open(filename, newline='') as csvfile:
+        iter = csv.reader(csvfile)
+        topline: List[str] = next(iter)
+        if topline != EXPECTED_LABELS:
+            raise ValueError(f"unexpected first line: got: {topline}")
+        result: RowList = None
+        for line in iter:
+            result = RLNode(list_to_row(line), result)
+    return result
+
+#Returns the length of a linked list of Rows.
+def listlen(ll: RowList) -> int:
+    if ll is None:
+        return 0
+    return 1 + listlen(ll.rest)
+
 # 'country' filed should only be comparable using 'equal' compare_type.
 # Numerical measurement fields of CO2 emissions only compared using 'less_than' 
 # - and 'greater_than' compare_type
@@ -120,48 +164,6 @@ def answer_6(ll_Rows: RowList):
 # China's electricity-and-heat emissions in 2070.
 def answer_7(ll_Rows: RowList):
     pass
-EXPECTED_LABELS = ['country', 'year', 'electricity_and_heat_co2_emissions',
-                   'electricity_and_heat_co2_emissions_per_capita',
-                   'energy_co2_emissions', 'energy_co2_emissions_per_capita',
-                   'total_co2_emissions_excluding_lucf',
-                   'total_co2_emissions_excluding_lucf_per_capita']
-
-#Converts a list of strings (one CSV line) into a Row.
-#Numeric fields that are empty strings become None.
-def list_to_row(line: List[str]) -> Row:
-    def parse_float(s: str) -> Union[float, None]:
-        if s == '':
-            return None
-        return float(s)
-    return Row(
-        country=line[0],
-        year=int(line[1]),
-        electricity_and_heat_co2_emissions=parse_float(line[2]),
-        electricity_and_heat_co2_emissions_per_capita=parse_float(line[3]),
-        energy_co2_emissions=parse_float(line[4]),
-        energy_co2_emissions_per_capita=parse_float(line[5]),
-        total_co2_emissions_excluding_lucf=parse_float(line[6]),
-        total_co2_emissions_excluding_lucf_per_capita=parse_float(line[7])
-    )
-
-#Accepts a CSV filename and returns a linked list of Rows.
-#Raises ValueError if the header line doesn't match expected labels.
-def read_csv_lines(filename: str) -> RowList:
-    with open(filename, newline='') as csvfile:
-        iter = csv.reader(csvfile)
-        topline: List[str] = next(iter)
-        if topline != EXPECTED_LABELS:
-            raise ValueError(f"unexpected first line: got: {topline}")
-        result: RowList = None
-        for line in iter:
-            result = RLNode(list_to_row(line), result)
-    return result
-
-#Returns the length of a linked list of Rows.
-def listlen(ll: RowList) -> int:
-    if ll is None:
-        return 0
-    return 1 + listlen(ll.rest)
 
 class Tests(unittest.TestCase):
     def test_list_to_row_full(self):
@@ -178,21 +180,41 @@ class Tests(unittest.TestCase):
         self.assertIsNone(row.electricity_and_heat_co2_emissions)
         self.assertIsNone(row.electricity_and_heat_co2_emissions_per_capita)
 
-# EXAMPLES
-# filter_ex1 = RLNode('' ) -> should be reading csv file
-
 
 # TEST CASES
 # (illegal test for filter)
 class Tests(unittest.TestCase):
-    # def test_filter_ValueError(self):
-    #     self.assertRaises(filter(filter_ex1, 'country', 'less_than', 6509), ValueError)
+    def test_filter_ValueError(self):
+        lines : list[Row] = read_csv_lines('sample-file.csv')
+        self.assertRaises(ValueError, filter, lines, 'country', 'less_than', 6509 )
+
+    def test_filter_equal(self):
+        lines : list[Row] = read_csv_lines('sample-file.csv')
+        equal_ans = RLNode(Row('Lithuania',2002,5.33,1.5160139,10.93,3.108824,11.22,3.1913087
+                            ), None)
+        self.assertEqual(filter(lines, 'year', 'equal', 2002), equal_ans)
+
+    def test_filter_less_than(self):
+        lines : list[Row] = read_csv_lines('sample-file.csv')
+        equal_ans = RLNode(Row('Lithuania',2003,5.24,1.5102245,10.94,3.1530259,11.23,3.2366068), 
+                           RLNode(Row('Lithuania',2002,5.33,1.5160139,10.93,3.108824,11.22,3.1913087),
+                                         RLNode(Row('Lithuania',2001,5.53,1.5533075,10.87,3.0532465,11.16,3.1347039),
+                                                RLNode(Row('Lithuania',2000,5.07,1.4084746,10.22,2.8391736,10.52,2.9225154),
+                                                       None))))
+
+        self.assertEqual(filter(lines, 'electricity_and_heat_co2_emissions', 'less_than', 6.05), equal_ans)
+
+    # def test_filter_greater_than(self):
+    #     lines : list[Row] = read_csv_lines('sample-file.csv')
+    #     # equal_ans = RLNode(Row())
+    #     self.assertEqual(filter(lines, ''))
       
-    #     self.assertEqual(filter)
+
     def test_read_csv_lines_returns_rlnode(self):
         result = read_csv_lines('sample-file.csv')
         self.assertIsInstance(result, RLNode)
         
+
     def test_listlen_empty(self):
         self.assertEqual(listlen(None), 0)
 
