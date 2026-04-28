@@ -158,12 +158,18 @@ def answer_5(ll_Rows: RowList):
 
 # Increase in total electricity-and-heat emissions in China from 
 # - 1990 to 2020 in multiplier terms.
-def answer_6(ll_Rows: RowList):
-    pass
+def answer_6(ll: RowList) -> float:
+    china = filter(ll, 'country', 'equal', 'China')
+        val_1990 = filter(china, 'year', 'equal', 1990).first.electricity_and_heat_co2_emissions
+        val_2020 = filter(china, 'year', 'equal', 2020).first.electricity_and_heat_co2_emissions
+        return val_2020 / val_1990
 
 # China's electricity-and-heat emissions in 2070.
-def answer_7(ll_Rows: RowList):
-    pass
+def answer_7(ll: RowList) -> float:
+     china = filter(ll, 'country', 'equal', 'China')
+        val_2020 = filter(china, 'year', 'equal', 2020).first.electricity_and_heat_co2_emissions
+        annual_rate = answer_6(ll) ** (1 / 30)
+        return val_2020 * (annual_rate ** 50)
 
 class Tests(unittest.TestCase):
     def test_list_to_row_full(self):
