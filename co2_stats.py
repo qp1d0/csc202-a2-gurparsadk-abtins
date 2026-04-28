@@ -122,14 +122,13 @@ def filter(ll_rows: RowList, field_name: field_names,
 # Must use 'listlen' and 'filter' to produce an answer.
 
 # Number of countries listed in 'll_Rows'.
-def answer_1(ll_rows: RowList, year: int) -> int:
-    rows = filter(ll_rows, 'year', 'equal', year)
+def answer_1(ll_rows: RowList) -> int:
     seen = set()
 
-    while rows:
-        seen.add(rows.first.country)
-        rows = rows.rest
-    return len(set)
+    while ll_rows is not None:
+        seen.add(ll_rows.first.country)
+        ll_rows = ll_rows.rest
+    return len(seen)
 
 # Years represented in 'll_Rows' for Mexico.
 def answer_2(ll_rows_mex: RowList) -> RowList:
