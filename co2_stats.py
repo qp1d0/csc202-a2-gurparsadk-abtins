@@ -123,8 +123,9 @@ def filter(ll_rows: RowList, field_name: field_names,
 
 # Number of countries listed in 'll_Rows'.
 def answer_1(ll_rows: RowList) -> int:
+    if ll_rows is None:
+        return 0
     seen = set()
-
     while ll_rows is not None:
         seen.add(ll_rows.first.country)
         ll_rows = ll_rows.rest
