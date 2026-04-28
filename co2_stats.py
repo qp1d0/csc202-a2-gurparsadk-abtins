@@ -140,25 +140,28 @@ def answer_2(ll_rows_mex: RowList) -> RowList:
 def answer_3(ll_rows: RowList) -> RowList:
     us_1990 = filter(ll_rows, 'country', 'equal', 'USA')
     us_1990 = filter(us_1990, 'year', 'equal', 1990)
-    return filter(ll_rows, 'total_co2_emissions_excluding_lucf_per_capita', 
-                  'greater_than', 
+    if us_1990 is None:
+        return None
+    return filter(ll_rows, 'total_co2_emissions_excluding_lucf_per_capita',
+                  'greater_than',
                   us_1990.first.total_co2_emissions_excluding_lucf_per_capita)
+
 
 # Countries with higher per-capita total CO2 emissions (exclude lucf)
 # - than US in 2020.
 def answer_4(ll_rows: RowList) -> RowList:
     us_2020 = filter(filter(ll_rows, 'country', 'equal', 'USA'), 'year', 'equal', 2020)
-    return filter(
-        ll_rows,
-        'total_co2_emissions_excluding_lucf_per_capita',
-        'greater_than',
-        us_2020.first.total_co2_emissions_excluding_lucf_per_capita
-    )
+    if us_2020 is None:
+        return None
+    return filter(ll_rows, 'total_co2_emissions_excluding_lucf_per_capita',
+                  'greater_than',
+                  us_2020.first.total_co2_emissions_excluding_lucf_per_capita)
 
 # Approximate population of Luxembourg in 2014.
 def answer_5(ll_rows: RowList):
-    lux = filter(ll_rows, 'country', 'equal', 'Luxembourg')
-    lux = filter(lux, 'year', 'equal', 2014)
+    lux = filter(filter(ll_rows, 'country', 'equal', 'Luxembourg'), 'year', 'equal', 2014)
+    if lux is None:
+        return None
     row = lux.first
     return (row.total_co2_emissions_excluding_lucf * 1000000) / row.total_co2_emissions_excluding_lucf_per_capita
 
@@ -166,14 +169,19 @@ def answer_5(ll_rows: RowList):
 # - 1990 to 2020 in multiplier terms.
 def answer_6(ll: RowList) -> float:
     china = filter(ll, 'country', 'equal', 'China')
-    val_1990 = filter(china, 'year', 'equal', 1990).first.electricity_and_heat_co2_emissions
-    val_2020 = filter(china, 'year', 'equal', 2020).first.electricity_and_heat_co2_emissions
-    return val_2020 / val_1990
+    val_1990 = filter(china, 'year', 'equal', 1990)
+    val_2020 = filter(china, 'year', 'equal', 2020)
+    if val_1990 is None or val_2020 is None:
+        return 0
+    return val_2020.first.electricity_and_heat_co2_emissions / val_1990.first.electricity_and_heat_co2_emissions
 
 # China's electricity-and-heat emissions in 2070.
 def answer_7(ll: RowList) -> float:
     china = filter(ll, 'country', 'equal', 'China')
-    val_2020 = filter(china, 'year', 'equal', 2020).first.electricity_and_heat_co2_emissions
+    china_2020 = filter(china, 'year', 'equal', 2020)
+    if china_2020 is None:
+        return 0
+    val_2020 = china_2020.first.electricity_and_heat_co2_emissions
     annual_rate = answer_6(ll) ** (1 / 30)
     return val_2020 * (annual_rate ** 50)
 
